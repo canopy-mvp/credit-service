@@ -1,0 +1,21 @@
+---
+description: Coding conventions from Canopy (canopy-mvp)
+globs:
+alwaysApply: true
+---
+
+# Conventions
+
+## Structured logging with correlation
+Use a structured JSON logger (pino, winston, or similar) — never console.log, console.error, or console.warn.
+Every log entry must include: level, timestamp, requestId/correlationId, and a message.
+Log entries should be objects, not string concatenation: logger.info({ userId, action }, 'User logged in') not logger.info('User ' + userId + ' logged in').
+Include requestId in every log within a request lifecycle for distributed tracing.
+Log levels: error (failures requiring attention), warn (degraded but working), info (business events), debug (troubleshooting).
+
+## TypeScript strict mode
+Enable strict TypeScript configuration: strict: true, noUncheckedIndexedAccess: true, noImplicitReturns: true.
+Use explicit types on ALL function signatures — both parameters and return types. No type inference for public APIs.
+Never use 'any' type. Use 'unknown' for truly dynamic values and narrow with type guards.
+Prefer interfaces for object shapes, types for unions and intersections.
+Use readonly where mutation is not intended. Use as const for literal values.

@@ -1,0 +1,38 @@
+---
+description: Architecture standards from Canopy (canopy-mvp, locked)
+globs:
+alwaysApply: true
+---
+
+# Architecture standards
+
+## Structured error responses
+All API errors must return a consistent JSON structure:
+{ "error": { "code": "SCREAMING_SNAKE_CASE", "message": "Human-readable description", "details": {} } }
+
+Never expose internal details, stack traces, database errors, or file paths in error responses.
+Map all internal errors through an error handler. Use custom error classes with error codes.
+HTTP status codes: 400 for validation, 401 for auth, 403 for permissions, 404 for not found, 409 for conflicts, 500 for unexpected.
+
+## Authentication in middleware
+All authentication and authorization logic must live in middleware/preHandler hooks, never inline in route handlers.
+Route handlers should receive an already-authenticated user context.
+Use a shared auth middleware that validates JWT/session and attaches user info to the request.
+Never parse tokens, verify signatures, or check permissions inside business logic functions.
+Protect all routes by default — explicitly mark public routes rather than protecting private ones.
+
+## Repository pattern for data access
+All database access must go through repository functions — never use raw SQL or ORM calls directly in route handlers or business logic.
+Repository files live in a dedicated directory (src/repositories/ or src/data/).
+Each entity gets its own repository with typed methods: create, findById, findMany, update, delete.
+Route handlers call service functions, which call repositories. Never skip a layer.
+This ensures testability (mock repositories), separation of concerns, and consistent query patterns.
+
+## React Framework
+React is the standard framework, used in 3 repos (merchant-dashboard, admin-portal, shared-ui). Use React for consistency. Do not introduce alternative frameworks without architecture review.
+
+## Fastify Framework
+Fastify is the standard framework, used in 5 repos (payments-api, users-service, api-gateway, notifications-service, merchant-onboarding). Use Fastify for consistency. Do not introduce alternative frameworks without architecture review.
+
+## Prisma Framework
+Prisma is the standard framework, used in 3 repos (payments-api, users-service, merchant-onboarding). Use Prisma for consistency. Do not introduce alternative frameworks without architecture review.
