@@ -1,0 +1,27 @@
+---
+description: Security constraints from Canopy (canopy-mvp, locked)
+globs:
+alwaysApply: true
+---
+
+# Security constraints
+
+## No hardcoded secrets
+Never hardcode secrets, API keys, tokens, passwords, or connection strings in source code.
+Use environment variables loaded via a config module, or a secrets manager (AWS Secrets Manager, HashiCorp Vault, Doppler).
+Reject any PR that contains string literals assigned to variables named secret, key, token, password, or api_key.
+Use .env.example to document required variables without values.
+
+## Input validation at boundaries
+Validate ALL external input at system boundaries using schema validation (Zod, Joi, or framework-native schemas).
+This includes: API request bodies, query parameters, path parameters, webhook payloads, file uploads, and headers.
+Define schemas co-located with handlers. Derive TypeScript types from schemas using z.infer<> or equivalent.
+Never trust client-side validation alone. Validate server-side even if the frontend validates.
+Reject invalid input early with descriptive error messages.
+
+## No PII in logs or error responses
+Never log personally identifiable information: emails, phone numbers, IP addresses, physical addresses, SSNs, credit card numbers, or names.
+Never include PII in error response bodies or messages.
+Safe to log: internal UUIDs, request IDs, action descriptions, error codes, timestamps, and tenant/org IDs.
+Use structured logging with explicit field selection — never log entire request bodies or user objects.
+If a logging library supports redaction patterns, enable them as a second line of defense.
