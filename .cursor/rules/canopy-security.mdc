@@ -8,147 +8,9 @@ alwaysApply: true
 
 > ⚠️ LOCKED — These rules cannot be overridden.
 
-## Secrets & Credentials
-
-### No hardcoded secrets
-Check for: API keys, passwords, tokens, private keys, connection strings hardcoded in source code, config files, or comments.
-Flag patterns: `sk_live_`, `AKIA`, `-----BEGIN RSA`, `password=`, `secret=`, `Bearer ` followed by a literal token.
-Fix: reference from secrets manager (Vault, AWS Secrets Manager, Doppler) or environment variables.
-Never commit `.env` files. Use `.env.example` to document required variables without values.
-Every PR containing a literal secret must be blocked.
-
-### Base64 secrets are not allowed
-Base64 encoding is NOT a security mechanism and must never be used to store, transmit, or manage sensitive information such as API keys, passwords, tokens, database credentials, or encryption keys. Base64 is merely an encoding format (RFC 4648) designed for safe text representation of binary data, not for confidentiality or integrity protection.
-
-## Why Base64 is Insufficient
-Base64 can be decoded trivially by anyone with basic technical knowledge or automated tools. It provides zero cryptographic protection and creates a false sense of security. If a Base64-encoded secret is exposed in code, logs, or configuration files, it is immediately compromised. Compliance frameworks including OWASP, PCI-DSS, HIPAA, and SOC 2 explicitly prohibit relying on encoding as a substitute for proper secret management.
-
-## Proper Secret Management Requirements
-1. **Use dedicated secret management systems**: HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, Google Cloud Secret Manager, or equivalent enterprise solutions
-2. **Never hardcode secrets**: All sensitive values must be injected at runtime from secure external sources
-3. **Use environment variables or secure vaults**: Configuration must reference secret storage systems, never contain the actual secrets
-4. **Implement encryption at rest and in transit**: Secrets in transit must use TLS 1.3+; secrets at rest must use AES-256 or equivalent
-5. **Enforce strict access controls**: Implement least-privilege access with audit logging for all secret access
-6. **Rotate secrets regularly**: Establish automated rotation policies (typically 30-90 days depending on risk)
-
-## DO
-- Use environment variables with values provided by secure CI/CD secret management systems
-- Store secrets in AWS Secrets Manager, Vault, or equivalent with proper IAM/RBAC policies
-- Implement secret scanning in pre-commit hooks (e.g., git-secrets, detect-secrets, TruffleHog)
-- Use `.env.example` files showing required keys WITHOUT values as documentation
-- Implement comprehensive audit logging for all secret access
-- Use sealed secrets or encryption in transit for configuration files
-
-## DO NOT
-- Encode secrets with Base64: `const apiKey = Buffer.from(secretValue).toString('base64')` ❌
-- Store Base64 strings in code: `const token = 'aGVsbG8gd29ybGQ='` ❌
-- Assume Base64 provides any security protection whatsoever
-- Commit any file containing Base64-encoded secrets to version control
-- Log or print Base64-encoded secrets for debugging
-- Use Base64 as a layer in multi-layer encoding (e.g., Base64 + XOR + Caesar cipher) as a homegrown security solution
-- Accept configuration that references Base64 strings from environment variables: `const secret = Buffer.from(process.env.SECRET, 'base64').toString()` ❌
-
-## Correct Implementation Examples
-
-### Node.js/TypeScript with dotenv
-```javascript
-// .env (NOT in version control, managed by secure system)
-API_KEY=sk-1234567890abcdef
-DATABASE_PASSWORD=secure_password_here
-
-// src/config.ts
-import dotenv from 'dotenv';
-dotenv.config();
-
-const apiKey = process.env.API_KEY;
-if (!apiKey) {
-  throw new Error('API_KEY environment variable is required');
-}
-// Use apiKey directly - it's already a string, no decoding needed
-```
-
-### Node.js with AWS Secrets Manager
-```javascript
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-
-const client = new SecretsManagerClient({ region: 'us-east-1' });
-
-async function getSecret(secretName) {
-  try {
-    const response = await client.send(
-      new GetSecretValueCommand({ SecretId: secretName })
-    );
-    return JSON.parse(response.SecretString);
-  } catch (error) {
-    throw new Error(`Failed to retrieve secret: ${error.message}`);
-  }
-}
-
-const credentials = await getSecret('prod/database-credentials');
-// credentials.username and credentials.password are now available
-```
-
-### Docker/Container Secret Injection
-```dockerfile
-# Dockerfile - NEVER include secrets
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY src ./src
-# Do NOT include: ENV API_KEY=xxx
-CMD ["node", "src/index.js"]
-```
-
-```yaml
-# docker-compose.yml
-services:
-  app:
-    build: .
-    environment:
-      # Reference external secrets, never hardcode
-      API_KEY: ${API_KEY}  # Provided at runtime
-      DATABASE_URL: ${DATABASE_URL}
-    # OR use Docker secrets
-    secrets:
-      - db_password
-
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt  # Securely managed, never in repo
-```
-
-## Pre-commit Hook Configuration
-Implement automated secret scanning to prevent accidental commits:
-
-```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-set -e
-
-# Using detect-secrets
-detect-secrets scan --baseline .secrets.baseline
-if [ $? -ne 0 ]; then
-  echo "❌ Potential secrets detected. Commit aborted."
-  exit 1
-fi
-
-# Using git-secrets
-git secrets --pre_commit_hook -- "$@"
-
-echo "✓ Secret scan passed"
-```
-
-## Compliance and Audit Considerations
-- **PCI-DSS 3.4**: Render PAN unreadable anywhere it is stored (secrets must not be base64)
-- **OWASP A02:2021**: Cryptographic Failures - base64 is not cryptography
-- **SOC 2**: Requires encryption and proper access controls for sensitive data
-- **HIPAA**: Protected Health Information must use strong encryption, not encoding
-
-Maintain audit logs showing: who accessed what secret, when, from where, and why. Use centralized logging systems with tamper-proof features.
-
 ## Injection Prevention
 
+<!-- Source: canopy-mvp (org) -->
 ### Parameterized queries only
 Check for: SQL queries built with string concatenation or template literals containing user input.
 Flag: `query("SELECT * FROM users WHERE id = " + id)`, f-strings in SQL, `${variable}` inside query strings.
@@ -158,32 +20,16 @@ Injection attacks are the most exploited vulnerability class and are trivially p
 
 ## Data Privacy & PII
 
+<!-- Source: canopy-mvp (org) -->
 ### Never disable TLS/SSL verification
 Check for: `rejectUnauthorized: false`, `verify=False`, `InsecureSkipVerify: true`, `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 Flag as CRITICAL if found in any HTTP client, database connection, or API call.
 Fix: use proper certificate chains. For local dev, use mkcert to create locally-trusted certificates.
 Never accept self-signed certificates in application code. Disabling TLS makes all traffic vulnerable to interception.
 
-### Never log sensitive data
-Check for: passwords, API keys, tokens, session IDs, credit card numbers, SSNs, emails, phone numbers in log statements.
-Flag: `console.log(user)`, `logger.info(request.body)`, `JSON.stringify(patient)` in logging context.
-Safe to log: internal UUIDs, request IDs, action descriptions, error codes, timestamps.
-Logs are broadly accessible, shipped to third-party services, and retained long-term — they are a primary vector for data exposure.
-
-### Encrypt sensitive data at rest and in transit
-Check for: plaintext password storage, unencrypted database connections, HTTP (not HTTPS) API calls.
-Required: TLS 1.2+ for all network communication, AES-256 or equivalent for storage.
-Passwords: always bcrypt, scrypt, or argon2 with appropriate work factors. Never MD5 or SHA for passwords.
-Never implement custom cryptographic algorithms. Use established libraries (crypto, libsodium, etc.).
-
-### Data residency and region awareness
-Check for: tenant data storage and processing respects the tenant's configured region (EU, US, APAC).
-Flag: cross-region data transfers without checking tenant residency setting.
-Flag: hardcoded region references (us-east-1) without tenant region lookup.
-Fix: read tenant region from config and route storage/processing to the correct regional endpoint.
-
 ## Authorization & Access Control
 
+<!-- Source: canopy-mvp (org) -->
 ### Authorization on every endpoint
 Check for: API endpoints that check authentication (who you are) but skip authorization (what you can do).
 Flag: missing ownership checks on object-level routes (`GET/PUT/DELETE /:id`), admin endpoints without role verification.
@@ -191,22 +37,11 @@ Required: verify the authenticated caller is authorized for the specific operati
 Never rely on client-side route guards as the only access control. Enforce server-side.
 BOLA/IDOR (accessing other users' data by changing an ID) is the #1 API vulnerability.
 
-### Tenant data isolation
-Check for: every database query on customer data includes a tenant_id filter.
-Flag: any SELECT, UPDATE, or DELETE on tenant-scoped tables without tenant_id in the WHERE clause.
-Flag: any API endpoint that returns data without validating the requesting user's tenant matches the data's tenant.
-Fix: add tenant_id filtering at the repository layer, not the route handler. A query without tenant_id is a data leak.
-
 ## Destructive Operations
 
+<!-- Source: canopy-mvp (org) -->
 ### No unguarded destructive operations
 Check for: DELETE without WHERE, DROP TABLE, `rm -rf`, `git push --force`, `git reset --hard` without explicit confirmation.
 Flag: any operation that deletes data, drops tables, resets state, or modifies production infrastructure without a guard.
 Required: explicit confirmation flag, soft deletes preferred over hard deletes, rollback scripts for migrations.
 AI tools must never autonomously execute irreversible destructive operations.
-
-### Database changes through migrations only
-Check for: ad-hoc SQL scripts, direct ALTER TABLE calls outside migration files, manual schema changes.
-Required: all database schema changes go through the project's migration tool (Drizzle, Prisma, Alembic, Flyway, etc.).
-Every migration must have a corresponding rollback. Never connect to production to run manual queries.
-Direct modifications bypass change tracking, peer review, and rollback capability.
