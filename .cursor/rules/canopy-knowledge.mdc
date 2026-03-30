@@ -1,0 +1,31 @@
+---
+description: Knowledge & context from Canopy (canopy-mvp)
+globs:
+alwaysApply: true
+---
+
+# Knowledge & Context
+
+<!-- Source: canopy-mvp (org) -->
+## Domain vocabulary
+Domain vocabulary — enforce this standard across all code and AI-generated output.
+
+<!-- Source: canopy-mvp (org) -->
+## System architecture map
+System architecture map — enforce this standard across all code and AI-generated output.
+
+<!-- Source: canopy-mvp (org) -->
+## Workflow documentation
+Workflow documentation — enforce this standard across all code and AI-generated output.
+
+<!-- Source: canopy-mvp (org) -->
+## Decision records
+Decision records — enforce this standard across all code and AI-generated output.
+
+<!-- Source: canopy-mvp (org) -->
+## Onboarding guide
+Onboarding guide — enforce this standard across all code and AI-generated output.
+
+<!-- Source: canopy-mvp (org) -->
+## Temporal context
+Temporal context — enforce this standard across all code and AI-generated output.
