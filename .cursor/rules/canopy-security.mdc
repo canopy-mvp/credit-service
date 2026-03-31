@@ -12,36 +12,26 @@ alwaysApply: true
 
 <!-- Source: canopy-mvp (org) -->
 ### Parameterized queries only
-Check for: SQL queries built with string concatenation or template literals containing user input.
-Flag: `query("SELECT * FROM users WHERE id = " + id)`, f-strings in SQL, `${variable}` inside query strings.
-Fix: use parameterized queries (`$1`, `?`, `:param`), prepared statements, or ORM bindings.
-This applies to SQL, NoSQL (`$where`, `$ne` operators), LDAP, and OS commands.
-Injection attacks are the most exploited vulnerability class and are trivially preventable.
+NEVER concatenate user input into SQL/NoSQL/LDAP queries. ALWAYS use parameterized queries (`$1`, `?`, `:param`), prepared statements, or ORM bindings. Flag: `query("SELECT * FROM users WHERE id = " + id)`, f-strings in SQL, `${variable}` in queries. Use instead: `query("SELECT * FROM users WHERE id = $1", [id])`.
 
 ## Data Privacy & PII
 
 <!-- Source: canopy-mvp (org) -->
 ### Never disable TLS/SSL verification
-Check for: `rejectUnauthorized: false`, `verify=False`, `InsecureSkipVerify: true`, `NODE_TLS_REJECT_UNAUTHORIZED=0`.
-Flag as CRITICAL if found in any HTTP client, database connection, or API call.
-Fix: use proper certificate chains. For local dev, use mkcert to create locally-trusted certificates.
-Never accept self-signed certificates in application code. Disabling TLS makes all traffic vulnerable to interception.
+NEVER set `rejectUnauthorized: false`, `verify=False`, `InsecureSkipVerify: true`, or `NODE_TLS_REJECT_UNAUTHORIZED=0` in HTTP clients, database connections, or API calls. Flag as CRITICAL if found. Use proper certificate chains; for local dev, use mkcert to create locally-trusted certificates instead.
+
+<!-- Source: canopy-mvp (org) -->
+### Encrypt sensitive data at rest and in transit
+MUST use TLS 1.2+ for all network communication and AES-256+ for data at rest. NEVER store passwords in plaintext or use MD5/SHA for hashing; ALWAYS use bcrypt, scrypt, or argon2. NEVER implement custom crypto—use only established libraries (crypto, libsodium, openssl).
 
 ## Authorization & Access Control
 
 <!-- Source: canopy-mvp (org) -->
 ### Authorization on every endpoint
-Check for: API endpoints that check authentication (who you are) but skip authorization (what you can do).
-Flag: missing ownership checks on object-level routes (`GET/PUT/DELETE /:id`), admin endpoints without role verification.
-Required: verify the authenticated caller is authorized for the specific operation on the specific resource.
-Never rely on client-side route guards as the only access control. Enforce server-side.
-BOLA/IDOR (accessing other users' data by changing an ID) is the #1 API vulnerability.
+MUST verify authenticated caller has permission for the specific resource and operation. Every GET/PUT/DELETE /:id route MUST check ownership or role before executing. NEVER rely on client-side guards alone. Example: Check `if (user.id !== resource.ownerId && !user.isAdmin) return 403` on object routes.
 
 ## Destructive Operations
 
 <!-- Source: canopy-mvp (org) -->
 ### No unguarded destructive operations
-Check for: DELETE without WHERE, DROP TABLE, `rm -rf`, `git push --force`, `git reset --hard` without explicit confirmation.
-Flag: any operation that deletes data, drops tables, resets state, or modifies production infrastructure without a guard.
-Required: explicit confirmation flag, soft deletes preferred over hard deletes, rollback scripts for migrations.
-AI tools must never autonomously execute irreversible destructive operations.
+NEVER execute DELETE, DROP, rm -rf, git push --force, or git reset --hard without explicit user confirmation. MUST implement soft deletes, provide rollback scripts for migrations, and require confirmation flags for all destructive operations. Example: Use UPDATE is_deleted=true instead of DELETE.
