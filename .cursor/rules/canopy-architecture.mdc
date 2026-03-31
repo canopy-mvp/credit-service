@@ -6,13 +6,9 @@ alwaysApply: true
 
 # Architecture & Patterns
 
-## Framework & Runtime
-
-<!-- Source: credit-service (repo) -->
-### TypeScript + Fastify backend. Prisma ORM.
-TypeScript + Fastify backend. Prisma ORM.
-Important: facility amounts are always in cents (integer). Never use floats for money.
-Auth: JWT tokens validated in preHandler middleware.
+<!-- Source: canopy-mvp (org) -->
+## Use designated framework
+Use designated framework — enforce this standard across all code and AI-generated output.
 
 <!-- Source: canopy-mvp (org) -->
 ## Structured error handling
@@ -37,7 +33,3 @@ Unit test coverage — enforce this standard across all code and AI-generated ou
 <!-- Source: canopy-mvp (org) -->
 ## Code organization standards
 Code organization standards — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## Naming conventions
-Naming conventions — enforce this standard across all code and AI-generated output.
