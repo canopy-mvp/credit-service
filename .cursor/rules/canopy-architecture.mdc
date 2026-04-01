@@ -8,28 +8,28 @@ alwaysApply: true
 
 <!-- Source: canopy-mvp (org) -->
 ## Use designated framework
-Use designated framework — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## Structured error handling
-Structured error handling — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## Structured logging
-Structured logging — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## Input validation on every endpoint
-Input validation on every endpoint — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## API versioning
-API versioning — enforce this standard across all code and AI-generated output.
-
-<!-- Source: canopy-mvp (org) -->
-## Unit test coverage
-Unit test coverage — enforce this standard across all code and AI-generated output.
+MUST use the designated framework for all new code and AI-generated output. NEVER introduce alternative frameworks without architecture review. Example: Use Next.js for all React projects, not Remix or Astro.
 
 <!-- Source: canopy-mvp (org) -->
 ## Code organization standards
-Code organization standards — enforce this standard across all code and AI-generated output.
+MUST organize code into logical modules by feature/domain. Use single-responsibility principle: one class/function per concern. Example: place user authentication in auth/ module, not mixed with payment logic. Enforce across all generated and existing code.
+
+<!-- Source: canopy-mvp (org) -->
+## API versioning
+MUST use URL path versioning (e.g., /api/v1/users). NEVER use query parameters or headers for major versions. Include version in all endpoint documentation.
+
+<!-- Source: canopy-mvp (org) -->
+## Unit test coverage
+MUST achieve ≥80% code coverage before merge. Test all public functions, error paths, and edge cases. Example: for `parse()`, test valid input, null/invalid input, and boundary conditions.
+
+<!-- Source: canopy-mvp (org) -->
+## Structured error handling
+MUST use try-catch blocks with specific error types, log errors with context, and return structured responses. NEVER swallow exceptions silently. Example: catch(SpecificError) { logger.error({code, message, context}); return {success: false, error}} instead of generic catch-all.
+
+<!-- Source: canopy-mvp (org) -->
+## Structured logging
+MUST use structured logging with JSON format including timestamp, level, context, and message fields. NEVER log raw strings. Example: {"timestamp": "2024-01-15T10:30:00Z", "level": "error", "context": "auth", "message": "login failed"}
+
+<!-- Source: canopy-mvp (org) -->
+## Input validation on every endpoint
+MUST validate all inputs against schema (type, length, range, format) before processing. NEVER process unvalidated user data. Use: schema validators (zod, joi) or explicit type checks with rejection on mismatch.
