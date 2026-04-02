@@ -28,7 +28,7 @@ MUST use TLS 1.2+ for all network communication and AES-256+ for data at rest. N
 
 <!-- Source: canopy-mvp (org) -->
 ### Authorization on every endpoint
-MUST verify authenticated caller has permission for the specific resource and operation. Every GET/PUT/DELETE /:id route MUST check ownership or role before executing. NEVER rely on client-side guards alone. Example: Check `if (user.id !== resource.ownerId && !user.isAdmin) return 403` on object routes.
+MUST verify user permission before executing any operation. Every /:id route MUST check `user.id === resource.ownerId || user.role === 'admin'` and return 403 if false. NEVER skip authorization checks; NEVER trust client-side filtering.
 
 ## Destructive Operations
 

@@ -11,10 +11,6 @@ alwaysApply: true
 MUST use domain-specific terms consistently across all code, docs, and AI output. Example: use 'customer' not 'user', 'transaction' not 'payment'. Enforce via code review and linting rules.
 
 <!-- Source: canopy-mvp (org) -->
-## Onboarding guide
-MUST follow the project onboarding guide for all code and AI-generated output. Verify setup steps, dependencies, and environment config match guide requirements before committing.
-
-<!-- Source: canopy-mvp (org) -->
 ## Decision records
 MUST create ADR (Architecture Decision Record) files for all significant technical decisions. File as docs/adr/NNNN-title.md with context, decision, and consequences. Example: docs/adr/0001-use-postgres.md explaining why PostgreSQL was chosen over MySQL.
 
@@ -29,3 +25,7 @@ MUST document all workflows with: purpose, inputs, outputs, and decision logic. 
 <!-- Source: canopy-mvp (org) -->
 ## System architecture map
 MUST maintain and reference the system architecture map in all design decisions and code generation. Include architecture context in prompts; use diagrams or docs/architecture.md as reference. NEVER add components without mapping them to existing architecture layers.
+
+<!-- Source: canopy-mvp (org) -->
+## Onboarding guide
+MUST complete project onboarding before writing code: verify setup steps, dependencies, and environment config. ALWAYS run `npm install && npm run setup` exactly as documented. Do NOT skip or modify onboarding steps.
