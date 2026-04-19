@@ -12,26 +12,48 @@ alwaysApply: true
 
 <!-- Source: canopy-mvp (org) -->
 ### Parameterized queries only
-NEVER concatenate user input into SQL/NoSQL/LDAP queries. ALWAYS use parameterized queries (`$1`, `?`, `:param`), prepared statements, or ORM bindings. Flag: `query("SELECT * FROM users WHERE id = " + id)`, f-strings in SQL, `${variable}` in queries. Use instead: `query("SELECT * FROM users WHERE id = $1", [id])`.
+NEVER concatenate or interpolate user input into SQL, NoSQL, LDAP, or OS commands. ALWAYS use parameterized queries (`$1`, `?`, `:param`), prepared statements, or ORM bindings. Example: use `query('SELECT * FROM users WHERE id = $1', [id])` instead of `query('SELECT * FROM users WHERE id = ' + id)`.
 
 ## Data Privacy & PII
 
 <!-- Source: canopy-mvp (org) -->
 ### Never disable TLS/SSL verification
-NEVER set `rejectUnauthorized: false`, `verify=False`, `InsecureSkipVerify: true`, or `NODE_TLS_REJECT_UNAUTHORIZED=0` in HTTP clients, database connections, or API calls. Flag as CRITICAL if found. Use proper certificate chains; for local dev, use mkcert to create locally-trusted certificates instead.
+NEVER set `rejectUnauthorized: false`, `verify=False`, `InsecureSkipVerify: true`, or `NODE_TLS_REJECT_UNAUTHORIZED=0`. For local dev, use mkcert to create trusted certificates. Flag in code review as CRITICAL if found.
 
 <!-- Source: canopy-mvp (org) -->
 ### Encrypt sensitive data at rest and in transit
-MUST use TLS 1.2+ for all network communication and AES-256+ for data at rest. NEVER store passwords in plaintext or use MD5/SHA for hashing; ALWAYS use bcrypt, scrypt, or argon2. NEVER implement custom crypto—use only established libraries (crypto, libsodium, openssl).
+MUST use TLS 1.2+ for all network communication and AES-256+ for storage. Hash passwords with bcrypt, scrypt, or argon2 only—NEVER MD5/SHA. Example: use `bcrypt.hash(password, 10)` instead of custom hashing.
 
 ## Authorization & Access Control
 
 <!-- Source: canopy-mvp (org) -->
 ### Authorization on every endpoint
-MUST verify user permission before executing any operation. Every /:id route MUST check `user.id === resource.ownerId || user.role === 'admin'` and return 403 if false. NEVER skip authorization checks; NEVER trust client-side filtering.
+MUST verify server-side that the authenticated user is authorized for the specific resource. Check ownership on `GET/PUT/DELETE /:id` and roles on admin endpoints. Example: `if(user.id !== resource.ownerId) throw 403`. Never rely on client-side guards alone—BOLA/IDOR is the #1 API vulnerability.
+
+<!-- Source: canopy-mvp (org) -->
+### Never implement custom authentication
+NEVER build custom password hashing, JWT validation, session management, or OAuth flows. MUST use the project's auth system or a proven provider (Auth0, Firebase, Cognito, Clerk). Custom auth introduces timing attacks and token vulnerabilities.
 
 ## Destructive Operations
 
 <!-- Source: canopy-mvp (org) -->
 ### No unguarded destructive operations
-NEVER execute DELETE, DROP, rm -rf, git push --force, or git reset --hard without explicit user confirmation. MUST implement soft deletes, provide rollback scripts for migrations, and require confirmation flags for all destructive operations. Example: Use UPDATE is_deleted=true instead of DELETE.
+NEVER execute DELETE, DROP, `rm -rf`, `git push --force`, or `git reset --hard` without explicit user confirmation. Require idempotency: soft deletes preferred over hard deletes, rollback scripts mandatory for migrations. AI tools must never autonomously execute irreversible operations.
+
+<!-- Source: canopy-mvp (org) -->
+### Database changes through migrations only
+MUST route all schema changes through migration tools (Drizzle, Prisma, Alembic, Flyway). NEVER run ad-hoc SQL or direct ALTER TABLE outside migrations. Every migration requires a rollback script. Direct modifications bypass peer review and rollback capability.
+
+## Error Exposure
+
+<!-- Source: canopy-mvp (org) -->
+### No internal details in error responses
+NEVER return stack traces, SQL, file paths, or database errors to clients. ALWAYS use: `{ "error": { "code": "ERROR_CODE", "message": "user-safe text", "requestId": "..." } }`. Route all errors through centralized handler.
+
+<!-- Source: canopy-mvp (org) -->
+## PII in logs
+NEVER log, expose in API responses, or store unencrypted: passwords, SSNs, credit cards, email addresses, phone numbers, auth tokens. Redact with placeholders (e.g., `***REDACTED***`) or hash when auditing is needed. PII exposure violates compliance and enables identity theft.
+
+<!-- Source: canopy-mvp (org) -->
+## secrets management
+NEVER commit secrets, API keys, or credentials to version control. MUST use environment variables or a secrets manager (e.g., .env.local, AWS Secrets Manager). Rotate exposed secrets immediately.
