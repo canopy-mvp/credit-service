@@ -1,20 +1,27 @@
 ---
-description: Architecture & pattern standards from Canopy (canopy-mvp)
+description: Architecture & pattern standards from Canopy (canopy-mvp, locked)
 globs:
 alwaysApply: true
 ---
 
 # Architecture & Patterns
 
-<!-- Source: canopy-mvp (org) -->
-## Use designated framework
-MUST use the designated framework for all new code and AI-generated output. NEVER introduce alternative frameworks without architecture review. Example: Use Next.js for all React projects, not Remix or Astro.
+## Error Handling
 
 <!-- Source: canopy-mvp (org) -->
-## API versioning
-MUST use URL path versioning (e.g., /api/v1/users). NEVER use query parameters or headers for major versions. Include version in all endpoint documentation.
+### No silent error swallowing
+NEVER use empty catch blocks, bare `except: pass`, or `.catch(() => {})`. Every catch block MUST handle (retry/fallback/user message), re-throw, or log with context. If safe to ignore, add a comment explaining why. Example: `catch(e) { logger.error('Payment retry failed', {error: e, userId}); notifyOps(); }` not `catch(e) {}`.
+
+## Testing
 
 <!-- Source: canopy-mvp (org) -->
-## Input validation on every endpoint
-MUST validate all inputs against schema (type, length, range, format) before processing. NEVER process unvalidated user data. Use: schema validators (zod, joi) or explicit type checks with rejection on mismatch.
+### Tests required for new logic
+MUST write tests for all new functions, endpoints, and behavioral changes. Minimum: happy path test, one error case, one boundary condition. Use the project's existing test framework and place tests in the established test directory. Code without tests is treated as untested and subject to removal.
 
+<!-- Source: canopy-mvp (org) -->
+## input validation
+MUST validate all inputs (query params, request body, URL segments) with Zod schemas before processing. Example: `z.object({ reference_id: z.string().uuid() })`. Reject invalid inputs with 400 status and schema error details. Never trust client data.
+
+<!-- Source: canopy-mvp (org) -->
+## repository pattern
+MUST route all database access through repository classes (e.g., `WebhookRepository`, `ChargeRepository`). NEVER call Prisma directly in service code. DO: inject repositories as dependencies.
